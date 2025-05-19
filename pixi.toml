@@ -1,0 +1,16 @@
+[workspace]
+authors = ["Mark Servilla <mark.servilla@gmail.com>"]
+channels = ["conda-forge"]
+name = "iam-migrate"
+platforms = ["linux-64"]
+version = "0.0.0"
+
+[tasks]
+
+[dependencies]
+python = "3.12.*"
+daiquiri = ">=3.0.0,<4"
+pixi-pycharm = ">=0.0.8,<0.0.9"
+sqlalchemy = ">=2.0.41,<3"
+click = ">=8.2.0,<9"
+psycopg2 = ">=2.9.10,<3"

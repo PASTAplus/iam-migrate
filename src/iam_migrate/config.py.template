@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+:Mod:
+    config
+
+:Synopsis:
+    Configuration class for private content
+
+:Author:
+    servilla
+
+:Created:
+    5/18/25
+"""
+import daiquiri
+
+
+logger = daiquiri.getLogger(__name__)
+
+
+class Config:
+
+    # PASTA database connection
+    DB_USER = "DB_USER"
+    DB_PW = "DB_PASSWORD"
+    DB_PORT = "5432"
+    DB_DB = "pasta"
+    DB_DRIVER = "postgresql+psycopg2"
+
+    HOSTS = ("package.lternet.edu", "package-s.lternet.edu", "package-d.lternet.edu")
