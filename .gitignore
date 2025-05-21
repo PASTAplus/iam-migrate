@@ -1,6 +1,7 @@
 # Project
 .idea/
 config.py
+certs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
