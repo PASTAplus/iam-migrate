@@ -22,6 +22,8 @@ import uuid
 import click
 import daiquiri
 from sqlalchemy import text
+from iam_lib.exceptions import IAMResponseError, IAMRequestError, IAMJSONDecodeError
+from iam_lib.api.profile import ProfileClient
 from iam_lib.api.resource import ResourceClient
 from iam_lib.api.rule import RuleClient
 
@@ -42,7 +44,20 @@ logger = daiquiri.getLogger(__name__)
 
 
 def migrate_data_packages(db: Database, host: str) -> None:
+    PACKAGE_ID = 0
+    RESOURCE_ID = 1
+    PRINCIPAL_OWNER = 2
+
     resource_client = ResourceClient(
+        scheme=Config.SCHEME,
+        host=host,
+        accept=Config.ACCEPT,
+        public_key_path=Config.PUBLIC_KEY_PATH,
+        algorithm=Config.ALGORITHM,
+        token=Config.TOKEN,
+    )
+
+    profile_client = ProfileClient(
         scheme=Config.SCHEME,
         host=host,
         accept=Config.ACCEPT,
@@ -62,23 +77,30 @@ def migrate_data_packages(db: Database, host: str) -> None:
     with db.connection.connect() as conn:
         result = conn.execute(text(sql))
         for row in result:
-            package_id = row[0]
-            resource_id = row[1]
-            principal_owner = row[2]
-            # if principal_owner not in principals:
-            #     principal = profile_client.create_profile(principal_owner)
-            #     principals[principal_owner] = principal
-            # else:
-            #     principal = principals[principal_owner]
-            # metadata_uuid = str(uuid.uuid1())
-            # data_uuid = str(uuid.uuid1())
-            # data_packages[package_id] = [resource_id, principal_owner, principal, metadata_uuid, data_uuid]
-            # resource_client.create_resource(
-            #     principal=principal,
-            #     resource_key=row["resource_id"],
-            #     resource_label=row["package_id"],
-            #     resource_type="package",
-            # )
+            package_id = row[PACKAGE_ID]
+            resource_id = row[RESOURCE_ID]
+            principal_owner = row[PRINCIPAL_OWNER]
+            if principal_owner not in principals:
+                try:
+                    principal = profile_client.create_profile(principal_owner)
+                except (IAMRequestError, IAMResponseError, IAMJSONDecodeError) as e:
+                    logger.error(e)
+                    principal = f"EDI-{uuid.uuid4().hex}"
+                principals[principal_owner] = principal
+            else:
+                principal = principals[principal_owner]
+            metadata_uuid = str(uuid.uuid4().hex)
+            data_uuid = str(uuid.uuid4().hex)
+            data_packages[package_id] = [resource_id, principal_owner, principal, metadata_uuid, data_uuid]
+            try:
+                resource_client.create_resource(
+                    principal=principal,
+                    resource_key=row[RESOURCE_ID],
+                    resource_label=row[PACKAGE_ID],
+                    resource_type="package",
+                )
+            except (IAMRequestError, IAMResponseError) as e:
+                logger.error(e)
 
     sql = (
         "SELECT resource_id, principal_owner "
