@@ -22,6 +22,7 @@ import uuid
 import click
 import daiquiri
 from sqlalchemy import text
+
 from iam_lib.exceptions import IAMResponseError, IAMRequestError, IAMJSONDecodeError
 from iam_lib.api.profile import ProfileClient
 from iam_lib.api.resource import ResourceClient
