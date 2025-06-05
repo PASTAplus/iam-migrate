@@ -29,10 +29,12 @@ class Config:
     DB_DB = "pasta"
     DB_DRIVER = "postgresql+psycopg2"
 
-    HOSTS = ("package.lternet.edu", "package-s.lternet.edu", "package-d.lternet.edu")
+    PACKAGE_HOST = "PACKAGE_HOST"
+    AUTH_HOST = "AUTH_HOST"
 
     SCHEME = "https"
     ACCEPT = "json"
     PUBLIC_KEY_PATH = "PUBLIC_KEY_PATH"
-    ALGORITHM = "ES256"
-    TOKEN = "TOKEN"
+    PRIVATE_KEY_PATH = "PRIVATE_KEY_PATH"
+    JWT_ALGORITHM = "ES256"
+    CLIENT_ID = "CLIENT_ID"
