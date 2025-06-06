@@ -19,7 +19,7 @@ import uuid
 import daiquiri
 from sqlalchemy import text
 
-from iam_lib.exceptions import IAMLibException, IAMResponseError, IAMRequestError, IAMJSONDecodeError
+from iam_lib.exceptions import IAMLibException
 from iam_lib.api.profile import ProfileClient
 from iam_lib.api.resource import ResourceClient
 from iam_lib.api.rule import RuleClient
@@ -32,8 +32,8 @@ import jwt_token
 logger = daiquiri.getLogger(__name__)
 
 
-def migrate_package(pid: str):
-    """migrate_package.
+def package(pid: str):
+    """package.
 
     Create a data package resource tree and associated access control rules for a
     single data package revision. The resource tree follows (resource type in parens):
@@ -231,8 +231,21 @@ def migrate_package(pid: str):
                             logger.error(f"create_rule: {e}")
 
 
-def migrate_all():
-    pass
+def all_packages():
+
+    all_packages_sql = (
+        "SELECT distinct(package_id) "
+        "FROM datapackagemanager.resource_registry "
+        f"WHERE resource_type = 'dataPackage'"
+    )
+
+    db = Database(Config.PACKAGE_HOST)
+
+    with db.connection.connect() as conn:
+        result_set = conn.execute(text(all_packages_sql)).all()
+        for row in result_set:
+            pid = row[0]
+            package(pid=pid)
 
 
 def _profile_client(token: str):
