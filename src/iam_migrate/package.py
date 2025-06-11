@@ -67,7 +67,7 @@ def main(pids: tuple, pid_file: str, all: bool):
         migrate.all_packages()
         sys.exit(0)
 
-    logger.warn("No PIDs provided, exiting.")
+    logger.warning("No PIDs provided, perhaps you should run -h or --help for help. Exiting, bye!")
     sys.exit(0)
 
 
