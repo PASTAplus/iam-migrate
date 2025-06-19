@@ -81,7 +81,6 @@ def package(pid: str):
             edi_id = profile_client.create_profile(principal_owner)
         except IAMLibException as e:
             logger.error(f"create_profile: {e}")
-            edi_id = "EDI-6c3060965c1c42c38c5f5c7430a60966"  # Mock EDI profile identifier
 
         user_token = jwt_token.make_token(principal_owner, edi_id)
         resource_client = _resource_client(user_token)
@@ -261,6 +260,7 @@ def _profile_client(token: str):
         public_key_path=Config.PUBLIC_KEY_PATH,
         algorithm=Config.JWT_ALGORITHM,
         token=token,
+        truststore = Config.TRUSTSTORE,
     )
 
 
@@ -272,6 +272,7 @@ def _resource_client(token: str):
         public_key_path=Config.PUBLIC_KEY_PATH,
         algorithm=Config.JWT_ALGORITHM,
         token=token,
+        truststore = Config.TRUSTSTORE,
     )
 
 
@@ -283,4 +284,5 @@ def _rule_client(token: str):
         public_key_path=Config.PUBLIC_KEY_PATH,
         algorithm=Config.JWT_ALGORITHM,
         token=token,
+        truststore = Config.TRUSTSTORE,
     )
