@@ -221,12 +221,16 @@ def package(pid: str):
 
                     if permission is not None:
                         try:
-                            logger.info(f"resource_key: {resource_key}; principal: {principal}; permission: {permission}")
-                            rule_client.create_rule(
-                                resource_key=resource_key,
-                                principal=edi_id,
-                                permission=permission,
-                            )
+                            msg = f"resource_key: {resource_key}; principal: {principal}; permission: {permission}"
+                            if access_type == "allow":
+                                logger.info(msg)
+                                rule_client.create_rule(
+                                    resource_key=resource_key,
+                                    principal=edi_id,
+                                    permission=permission,
+                                )
+                            else:
+                                logger.warning(f"**DENY** - {msg}")
                         except IAMLibException as e:
                             logger.error(f"create_rule: {e}")
 
