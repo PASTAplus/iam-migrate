@@ -201,7 +201,7 @@ def package(pid: str):
         rule_client = _rule_client(user_token)
         for resource_key in resource_keys:
             access_sql = (
-                "SELECT principal, permission "
+                "SELECT principal, permission, access_type "
                 "FROM datapackagemanager.access_matrix "
                 f"WHERE resource_id = '{resource_key}'"
             )
