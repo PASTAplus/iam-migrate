@@ -211,6 +211,7 @@ def package(pid: str):
                 for row in result_set:
                     principal = row[0]
                     permission = row[1]
+                    access_type = row[2]
 
                     if principal is not None:
                         try:
