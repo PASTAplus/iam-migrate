@@ -19,10 +19,10 @@ import uuid
 import daiquiri
 from sqlalchemy import text
 
-from iam_lib.exceptions import IAMLibException
 from iam_lib.api.profile import ProfileClient
 from iam_lib.api.resource import ResourceClient
 from iam_lib.api.rule import RuleClient
+from iam_lib.models.permission import Permission
 
 from config import Config
 from database import Database
@@ -73,41 +73,33 @@ def package(pid: str):
         if row is not None:
             package_resource_key = row[0]
             principal_owner = row[1]
-            logger.info(f"package_resource_key: {package_resource_key}; principal_owner: {principal_owner}")
 
     if principal_owner is not None:
         profile_client = _profile_client(client_token)
-        try:
-            edi_id = profile_client.create_profile(principal_owner)
-        except IAMLibException as e:
-            logger.error(f"create_profile: {e}")
+        logger.info(f"Creating profile for principal '{principal_owner}'")
+        edi_id = profile_client.create_profile(idp_uid=principal_owner)["edi_id"]
+        logger.info(f"EDI profile ID '{edi_id}' created for principal '{principal_owner}'")
+        user_token = jwt_token.make_token(sub=edi_id, principal_owner=principal_owner)
 
-        user_token = jwt_token.make_token(principal_owner, edi_id)
+        resource_keys.append(package_resource_key)
         resource_client = _resource_client(user_token)
-
-        try:
-            resource_keys.append(package_resource_key)
-            resource_client.create_resource(
-                resource_key = package_resource_key,
-                resource_type = "package",
-                resource_label = pid,
-                parent_resource_key = None
-            )
-        except IAMLibException as e:
-            logger.error(f"create_resource: {e}")
+        logger.info(f"Creating package resource '{package_resource_key}' for PID '{pid}'")
+        resource_client.create_resource(
+            resource_key=package_resource_key,
+            resource_type="package",
+            resource_label=pid,
+            parent_resource_key=None
+        )
 
         # Metadata collection
         metadata_resource_key = uuid.uuid4().hex
-        try:
-            logger.info(f"metadata_resource_key: {metadata_resource_key}")
-            resource_client.create_resource(
-                resource_key = metadata_resource_key,
-                resource_type = "collection",
-                resource_label = "Metadata",
-                parent_resource_key = package_resource_key
-            )
-        except IAMLibException as e:
-            logger.error(f"create_resource: {e}")
+        logger.info(f"Creating metadata collection resource with key '{metadata_resource_key}' for PID '{pid}'")
+        resource_client.create_resource(
+            resource_key = metadata_resource_key,
+            resource_type = "collection",
+            resource_label = "Metadata",
+            parent_resource_key = package_resource_key
+        )
 
         # Metadata entities
         package_sql = (
@@ -123,16 +115,14 @@ def package(pid: str):
                 logger.info(f"eml_resource_key: {eml_resource_key}")
 
         if eml_resource_key is not None:
-            try:
-                resource_keys.append(eml_resource_key)
-                resource_client.create_resource(
-                    resource_key=eml_resource_key,
-                    resource_type="metadata",
-                    resource_label="LEVEL-1-EML",
-                    parent_resource_key=metadata_resource_key
-                )
-            except IAMLibException as e:
-                logger.error(f"create_resource: {e}")
+            resource_keys.append(eml_resource_key)
+            logger.info(f"Creating EML metadata resource with key '{eml_resource_key}' for PID '{pid}'")
+            resource_client.create_resource(
+                resource_key=eml_resource_key,
+                resource_type="metadata",
+                resource_label="EML Metadata",
+                parent_resource_key=metadata_resource_key
+            )
 
         package_sql = (
             "SELECT resource_id "
@@ -147,30 +137,24 @@ def package(pid: str):
                 logger.info(f"report_resource_key: {report_resource_key}")
 
         if report_resource_key is not None:
-            try:
-                resource_keys.append(report_resource_key)
-                resource_client.create_resource(
-                    resource_key=report_resource_key,
-                    resource_type="report",
-                    resource_label="Quality Report",
-                    parent_resource_key=metadata_resource_key
-                )
-            except IAMLibException as e:
-                logger.error(f"create_resource: {e}")
+            resource_keys.append(report_resource_key)
+            logger.info(f"Creating quality report resource with key '{report_resource_key}' for PID '{pid}'")
+            resource_client.create_resource(
+                resource_key=report_resource_key,
+                resource_type="report",
+                resource_label="Quality Report",
+                parent_resource_key=metadata_resource_key
+            )
 
         # Data collection
         data_resource_key = uuid.uuid4().hex
-        try:
-            logger.info(f"data_resource_key: {data_resource_key}")
-            resource_client.create_resource(
-                resource_key = data_resource_key,
-                resource_type = "collection",
-                resource_label = "Data",
-                parent_resource_key = package_resource_key
-            )
-        except IAMLibException as e:
-            logger.error(f"create_resource: {e}")
-
+        logger.info(f"Creating data collection resource with key '{data_resource_key}' for PID '{pid}'")
+        resource_client.create_resource(
+            resource_key=data_resource_key,
+            resource_type="collection",
+            resource_label="Data",
+            parent_resource_key = package_resource_key
+        )
 
         # Data entities
         package_sql = (
@@ -184,17 +168,14 @@ def package(pid: str):
                 entity_resource_key = row[0]
                 file_name = row[1]
                 entity_name = row[2]
-                try:
-                    logger.info(f"entity_resource_key: {entity_resource_key}; file_name: {file_name}; entity_name: {entity_name}")
-                    resource_keys.append(entity_resource_key)
-                    resource_client.create_resource(
-                        resource_key=entity_resource_key,
-                        resource_type="data",
-                        resource_label=f"{file_name}: {entity_name}",
-                        parent_resource_key=data_resource_key
-                    )
-                except IAMLibException as e:
-                    logger.error(f"create_resource: {e}")
+                resource_keys.append(entity_resource_key)
+                logger.info(f"Creating data entity resource with key '{entity_resource_key}' for PID '{pid}'")
+                resource_client.create_resource(
+                    resource_key=entity_resource_key,
+                    resource_type="data",
+                    resource_label=entity_name,
+                    parent_resource_key=data_resource_key
+                )
 
         # Create access control rules for all resource keys
         rule_client = _rule_client(user_token)
@@ -212,27 +193,22 @@ def package(pid: str):
                     permission = row[1]
                     access_type = row[2]
 
-                    if principal is not None:
-                        try:
-                            edi_id = profile_client.create_profile(principal)
-                        except IAMLibException as e:
-                            logger.error(f"create_profile: {e}")
-                            edi_id = "EDI-6c3060965c1c42c38c5f5c7430a60966"  # Mock EDI profile identifier
+                    if principal is not None and principal == "public":
+                        edi_id = "EDI-b2757fee12634ccca40d2d689f5c0543"
+                    else:
+                        edi_id = profile_client.create_profile(principal)["edi_id"]
 
                     if permission is not None:
-                        try:
+                        if access_type == "allow":
+                            logger.info(f"Creating access rule '{principal} ({edi_id}) has {permission} on {resource_key}'")
+                            rule_client.create_rule(
+                                resource_key=resource_key,
+                                principal=edi_id,
+                                permission=Permission(permission),
+                            )
+                        else:
                             msg = f"resource_key: {resource_key}; principal: {principal}; permission: {permission}"
-                            if access_type == "allow":
-                                logger.info(msg)
-                                rule_client.create_rule(
-                                    resource_key=resource_key,
-                                    principal=edi_id,
-                                    permission=permission,
-                                )
-                            else:
-                                logger.warning(f"**DENY** - {msg}")
-                        except IAMLibException as e:
-                            logger.error(f"create_rule: {e}")
+                            logger.warning(f"**DENY** - {msg}")
 
 
 def all_packages():
