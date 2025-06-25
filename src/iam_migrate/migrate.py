@@ -19,6 +19,7 @@ import uuid
 import daiquiri
 from sqlalchemy import text
 
+from iam_lib.exceptions import IAMResponseError
 from iam_lib.api.profile import ProfileClient
 from iam_lib.api.resource import ResourceClient
 from iam_lib.api.rule import RuleClient
@@ -54,6 +55,8 @@ def package(pid: str):
     Returns:
         None
     """
+
+    logger.info(f"{'*' * 10} {pid} {'*' * 10}")
 
     client_token = jwt_token.make_token(Config.CLIENT_ID)
     db = Database(Config.PACKAGE_HOST)
@@ -200,12 +203,19 @@ def package(pid: str):
 
                     if permission is not None:
                         if access_type == "allow":
-                            logger.info(f"Creating access rule '{principal} ({edi_id}) has {permission} on {resource_key}'")
-                            rule_client.create_rule(
-                                resource_key=resource_key,
-                                principal=edi_id,
-                                permission=Permission(permission),
-                            )
+                            logger.info(f"Creating access rule '{principal} ({edi_id})' has '{permission}' access on '{resource_key}'")
+                            try:
+                                rule_client.create_rule(
+                                    resource_key=resource_key,
+                                    principal=edi_id,
+                                    permission=Permission(permission),
+                                )
+                            except IAMResponseError as e:
+                                if "Rule already exists" in str(e):
+                                    msg = f"Ignoring: {e}"
+                                    logger.error(msg)
+                                else:
+                                    raise e
                         else:
                             msg = f"resource_key: {resource_key}; principal: {principal}; permission: {permission}"
                             logger.warning(f"**DENY** - {msg}")
