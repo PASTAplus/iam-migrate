@@ -247,7 +247,7 @@ def _profile_client(token: str):
         algorithm=Config.JWT_ALGORITHM,
         token=token,
         truststore=Config.TRUSTSTORE,
-        timeout=60,
+        timeout=Config.TIMEOUT,
     )
 
 
@@ -260,7 +260,7 @@ def _resource_client(token: str):
         algorithm=Config.JWT_ALGORITHM,
         token=token,
         truststore=Config.TRUSTSTORE,
-        timeout=60,
+        timeout=Config.TIMEOUT,
     )
 
 
@@ -273,5 +273,5 @@ def _rule_client(token: str):
         algorithm=Config.JWT_ALGORITHM,
         token=token,
         truststore=Config.TRUSTSTORE,
-        timeout=60,
+        timeout=Config.TIMEOUT,
     )
