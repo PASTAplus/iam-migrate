@@ -246,7 +246,8 @@ def _profile_client(token: str):
         public_key_path=Config.PUBLIC_KEY_PATH,
         algorithm=Config.JWT_ALGORITHM,
         token=token,
-        truststore = Config.TRUSTSTORE,
+        truststore=Config.TRUSTSTORE,
+        timeout=60,
     )
 
 
@@ -258,7 +259,8 @@ def _resource_client(token: str):
         public_key_path=Config.PUBLIC_KEY_PATH,
         algorithm=Config.JWT_ALGORITHM,
         token=token,
-        truststore = Config.TRUSTSTORE,
+        truststore=Config.TRUSTSTORE,
+        timeout=60,
     )
 
 
@@ -270,5 +272,6 @@ def _rule_client(token: str):
         public_key_path=Config.PUBLIC_KEY_PATH,
         algorithm=Config.JWT_ALGORITHM,
         token=token,
-        truststore = Config.TRUSTSTORE,
+        truststore=Config.TRUSTSTORE,
+        timeout=60,
     )
