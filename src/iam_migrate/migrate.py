@@ -23,7 +23,7 @@ from iam_lib.exceptions import IAMResponseError
 from iam_lib.api.profile import ProfileClient
 from iam_lib.api.resource import ResourceClient
 from iam_lib.api.rule import RuleClient
-from iam_lib.models.permission import Permission
+from iam_lib.models.permission import Permission, PERMISSION_MAP
 
 from config import Config
 from database import Database
@@ -208,14 +208,24 @@ def package(pid: str):
                                 rule_client.create_rule(
                                     resource_key=resource_key,
                                     principal=edi_id,
-                                    permission=Permission(permission),
+                                    permission=Permission(PERMISSION_MAP.index(permission)),
                                 )
-                            except IAMResponseError as e:
-                                if "Rule already exists" in str(e):
-                                    msg = f"Ignoring: {e}"
-                                    logger.error(msg)
+                            except IAMResponseError as ex:
+                                if "Rule already exists" in str(ex):
+                                    msg = f"Ignoring: {ex}"
+                                    logger.warn(msg)
                                 else:
-                                    raise e
+                                    raise ex
+                            logger.info(f"Walking up tree")
+                            _walk_up_tree(
+                                rule_client=rule_client,
+                                resource_key=resource_key,
+                                principal_id=edi_id,
+                                permission=Permission(PERMISSION_MAP.index(permission)),
+                                package_resource_key=package_resource_key,
+                                metadata_resource_key=metadata_resource_key,
+                                data_resource_key=data_resource_key,
+                            )
                         else:
                             msg = f"resource_key: {resource_key}; principal: {principal}; permission: {permission}"
                             logger.warning(f"**DENY** - {msg}")
@@ -247,7 +257,7 @@ def _profile_client(token: str):
         algorithm=Config.JWT_ALGORITHM,
         token=token,
         truststore=Config.TRUSTSTORE,
-        timeout=Config.TIMEOUT,
+        timeout=Config.CONNECT_TIMEOUT,
     )
 
 
@@ -260,7 +270,7 @@ def _resource_client(token: str):
         algorithm=Config.JWT_ALGORITHM,
         token=token,
         truststore=Config.TRUSTSTORE,
-        timeout=Config.TIMEOUT,
+        timeout=Config.CONNECT_TIMEOUT,
     )
 
 
@@ -273,5 +283,73 @@ def _rule_client(token: str):
         algorithm=Config.JWT_ALGORITHM,
         token=token,
         truststore=Config.TRUSTSTORE,
-        timeout=Config.TIMEOUT,
+        timeout=Config.CONNECT_TIMEOUT,
     )
+
+
+def _walk_up_tree(
+    rule_client: RuleClient,
+    resource_key: str,
+    principal_id: str,
+    permission: Permission,
+    package_resource_key: str,
+    metadata_resource_key: str,
+    data_resource_key: str,
+):
+    if "/data/" in resource_key:
+        # Update data collection ACR
+        _update_rule(
+            rule_client=rule_client,
+            resource_key=data_resource_key,
+            principal_id=principal_id,
+            permission=permission
+        )
+    elif "/metadata/" in resource_key or "/report/" in resource_key:
+        # Update metadata collection ACR
+        _update_rule(
+            rule_client=rule_client,
+            resource_key=metadata_resource_key,
+            principal_id=principal_id,
+            permission=permission
+        )
+
+    # Update package ACR
+    _update_rule(
+        rule_client=rule_client,
+        resource_key=package_resource_key,
+        principal_id=principal_id,
+        permission=permission
+    )
+
+
+def _update_rule(
+    rule_client: RuleClient,
+    resource_key: str,
+    principal_id: str,
+    permission: Permission):
+
+    rule = {"permission": "none"}
+    try:
+        rule = rule_client.read_rule(
+            resource_key=resource_key,
+            principal=principal_id,
+        )
+    except IAMResponseError as ex:
+        logger.warn(ex)
+        status = ex.response.status_code
+        if status == 404:
+            rule_client.create_rule(
+                resource_key=resource_key,
+                principal=principal_id,
+                permission=permission,
+            )
+            logger.info(f"Creating access rule '{principal_id}' has '{permission}' access on '{resource_key}'")
+        else:
+            rule_permission = Permission(PERMISSION_MAP.index(rule["permission"]))
+            if permission.value > rule_permission.value:
+                rule_client.update_rule(
+                    resource_key=resource_key,
+                    principal=principal_id,
+                    permission=permission,
+                )
+                logger.info(f"Rule '{resource_key}, {principal_id}' updated from '{rule["permission"]}' to '{PERMISSION_MAP[permission.value]}'")
