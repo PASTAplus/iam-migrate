@@ -39,4 +39,5 @@ class Config:
     JWT_ALGORITHM = "ES256"
     CLIENT_ID = "CLIENT_ID"
     TRUSTSTORE = None
-    TIMEOUT = 120
+    CONNECT_TIMEOUT = 120
+    JWT_TIMEOUT = 24

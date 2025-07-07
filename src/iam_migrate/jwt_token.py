@@ -37,7 +37,7 @@ def make_token(sub: str, principal_owner: str = None ) -> str:
         "sn": None,
         "iat": now,
         "nbf": now,
-        "exp": now + timedelta(hours=1),
+        "exp": now + timedelta(hours=Config.JWT_TIMEOUT),
         "principals": [],
         "isEmailEnabled": False,
         "isEmailVerified": False,
