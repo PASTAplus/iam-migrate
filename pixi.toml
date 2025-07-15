@@ -2,7 +2,7 @@
 authors = ["Mark Servilla <mark.servilla@gmail.com>"]
 channels = ["conda-forge"]
 name = "iam-migrate"
-platforms = ["linux-64"]
+platforms = ["linux-64", "linux-aarch64"]
 version = "0.0.0"
 
 [tasks]
