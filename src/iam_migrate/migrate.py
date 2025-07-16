@@ -197,7 +197,9 @@ def package(pid: str):
                     access_type = row[2]
 
                     if principal is not None and principal == "public":
-                        edi_id = "EDI-b2757fee12634ccca40d2d689f5c0543"
+                        edi_id = Config.PUBLIC_ID
+                    elif principal is not None and principal == "authenticated":
+                        edi_id = Config.AUTHENTICATED_ID
                     else:
                         edi_id = profile_client.create_profile(principal)["edi_id"]
 
