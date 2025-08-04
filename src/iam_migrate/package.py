@@ -253,7 +253,7 @@ def all_packages():
 def _profile_client(token: str):
     return ProfileClient(
         scheme=Config.SCHEME,
-        host=Config.AUTH_HOST,
+        host=f"{Config.AUTH_HOST}:{Config.AUTH_PORT}",
         accept=Config.ACCEPT,
         public_key_path=Config.PUBLIC_KEY_PATH,
         algorithm=Config.JWT_ALGORITHM,
@@ -266,7 +266,7 @@ def _profile_client(token: str):
 def _resource_client(token: str):
     return ResourceClient(
         scheme=Config.SCHEME,
-        host=Config.AUTH_HOST,
+        host=f"{Config.AUTH_HOST}:{Config.AUTH_PORT}",
         accept=Config.ACCEPT,
         public_key_path=Config.PUBLIC_KEY_PATH,
         algorithm=Config.JWT_ALGORITHM,
@@ -279,7 +279,7 @@ def _resource_client(token: str):
 def _rule_client(token: str):
     return RuleClient(
         scheme=Config.SCHEME,
-        host=Config.AUTH_HOST,
+        host=f"{Config.AUTH_HOST}:{Config.AUTH_PORT}",
         accept=Config.ACCEPT,
         public_key_path=Config.PUBLIC_KEY_PATH,
         algorithm=Config.JWT_ALGORITHM,
