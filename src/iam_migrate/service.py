@@ -40,6 +40,15 @@ def migrate(service_file: str):
     Args:
         service_file: Path to the service XML file
     """
+    if "DataPackageManager" in service_file:
+        _host = Config.PACKAGE_HOST
+        _port = Config.PACKAGE_PORT
+        _service = Config.PACKAGE_SERVICE
+    else:
+        _host = Config.AUDIT_HOST
+        _port = Config.AUDIT_PORT
+        _service = Config.AUDIT_SERVICE
+
     namespaces = {
         'pasta': 'pasta://pasta.edirepository.org/service-0.1'
     }
@@ -53,11 +62,11 @@ def migrate(service_file: str):
     service_methods = root.findall("pasta:service-method", namespaces)
     for method in service_methods:
         service_name = method.get("name")
-        print(service_name)
+        print(f"{_host}:{_service}:{service_name}")
         resource_client.create_resource(
-            resource_key=f"{Config.PACKAGE_HOST}:{Config.PACKAGE_SERVICE}:{service_name}",
+            resource_key=f"{_host}:{_service}:{service_name}",
             resource_type="service",
-            resource_label=f"{Config.PACKAGE_SERVICE}:{service_name}",
+            resource_label=f"{_service}:{service_name}",
             parent_resource_key=None
         )
         allows = method.findall(".//access/allow", namespaces)
@@ -68,7 +77,7 @@ def migrate(service_file: str):
                 edi_id = EDI_ID_MAP[PASTA_ID_MAP.index(principal)]
                 print(f"    {principal} ({edi_id}) - {permission}")
                 rule_client.create_rule(
-                    resource_key=f"{Config.PACKAGE_HOST}:{Config.PACKAGE_SERVICE}:{service_name}",
+                    resource_key=f"{_host}:{_service}:{service_name}",
                     principal=edi_id,
                     permission=Permission(PERMISSION_MAP.index(permission)),
                 )
