@@ -43,14 +43,16 @@ def migrate(service_file: str):
         _host = Config.PACKAGE_HOST
         _port = Config.PACKAGE_PORT
         _service = Config.PACKAGE_SERVICE
+        namespaces = {
+            'pasta': 'pasta://pasta.edirepository.org/service-0.1'
+        }
     else:
         _host = Config.AUDIT_HOST
         _port = Config.AUDIT_PORT
         _service = Config.AUDIT_SERVICE
-
-    namespaces = {
-        'pasta': 'pasta://pasta.edirepository.org/service-0.1'
-    }
+        namespaces = {
+            'pasta': 'pasta://pasta.lternet.edu/service-0.1'
+        }
 
     client_token = jwt_token.make_token(Config.CLIENT_ID)
     resource_client = _resource_client(client_token)
