@@ -19,8 +19,7 @@ from pathlib import Path
 
 import daiquiri
 from lxml import etree
-from iam_lib.exceptions import IAMResponseError
-from iam_lib.api.profile import ProfileClient
+
 from iam_lib.api.resource import ResourceClient
 from iam_lib.api.rule import RuleClient
 from iam_lib.models.permission import Permission, PERMISSION_MAP
