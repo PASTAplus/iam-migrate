@@ -20,6 +20,7 @@ import daiquiri
 from sqlalchemy import text
 
 from iam_lib.exceptions import IAMResponseError
+from iam_lib.api.group import GroupClient
 from iam_lib.api.profile import ProfileClient
 from iam_lib.api.resource import ResourceClient
 from iam_lib.api.rule import RuleClient
@@ -278,6 +279,19 @@ def _resource_client(token: str):
 
 def _rule_client(token: str):
     return RuleClient(
+        scheme=Config.SCHEME,
+        host=f"{Config.AUTH_HOST}:{Config.AUTH_PORT}",
+        accept=Config.ACCEPT,
+        public_key_path=Config.PUBLIC_KEY_PATH,
+        algorithm=Config.JWT_ALGORITHM,
+        token=token,
+        truststore=Config.TRUSTSTORE,
+        timeout=Config.CONNECT_TIMEOUT,
+    )
+
+
+def _group_client(token: str):
+    return GroupClient(
         scheme=Config.SCHEME,
         host=f"{Config.AUTH_HOST}:{Config.AUTH_PORT}",
         accept=Config.ACCEPT,
