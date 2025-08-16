@@ -85,6 +85,9 @@ def migrate(pid: str):
         logger.info(f"EDI profile ID '{edi_id}' created for principal '{principal_owner}'")
         user_token = jwt_token.make_token(sub=edi_id, principal_owner=principal_owner)
 
+        group_client = _group_client(client_token)
+        group_client.add_group_member(group_edi_identifier=Config.VETTED_ID, profile_edi_identifier=edi_id)
+
         resource_keys.append(package_resource_key)
         resource_client = _resource_client(user_token)
         logger.info(f"Creating package resource '{package_resource_key}' for PID '{pid}'")
